@@ -1,5 +1,4 @@
 __author__ = 'Hunter'
-from db import check_table_exists
 import numpy as np
 import pandas as pd
 import re
@@ -28,17 +27,20 @@ def create_table(dbconn, tablename, header):
 	dbconn.commit()
 
 def format_record(record):
-	record = [re.sub('\s+', ' ', record).strip() for r in record]
+	record = [re.sub('\s+', ' ', r).strip().replace("'", '') for r in record]
 	return record
 
 # Run the query to insert the record into our database
 def insert_data(dbconn, tablename, columns, data):
 	cur = dbconn.cursor()
 	column_str = ','.join(columns)
-	record = format_record(data)
-	data_str = ','.join(data)
-	query = 'INSERT INTO %s (%s) VALUES (%s);' % (tablename, column_str, data_str)
-	cur.execute(query)
+	record = tuple(format_record(data))
+	# data_str = ','.join(record)
+	query = 'INSERT INTO %s (%s) VALUES %s;' % (tablename, column_str, record)
+	try:
+		cur.execute(query)
+	except:
+		print('a')
 
 if __name__ == "__main__":
 	# TODO Fill in empty columns
@@ -49,6 +51,7 @@ if __name__ == "__main__":
 	db_file.close()
 	conn_str = "host='%s' dbname='%s' user='%s' password='%s' port='%s'" % (db_json.get('host'), db_json.get('dbname'), db_json.get('user'), db_json.get('password'), db_json.get('port'))
 	conn = psycopg2.connect(conn_str)
+	conn.autocommit = True
 	print('Successfully connected to %s' % db_json.get('dbname'))
 
 	if not check_table_exists(conn, 'brooklyn_sales'):
@@ -61,11 +64,16 @@ if __name__ == "__main__":
 		create_table(conn, 'brooklyn_sales', columns)
 		print('Table created.')
 		print('Adding data to database...')
+		count = 1
 		for row in reader:
 			insert_data(conn, 'brooklyn_sales', columns, row)
-		conn.commit()
+			print('%s' % count)
+			count += 1
 		print('Upload complete. Closing file connections.')
 		csv_file.close()
 	else:
 		print('Data already loaded into database.')
-		# TODO start predicting!
+	# TODO start predicting!
+	query = 'SELECT * FROM brooklyn_sales ORDER BY id DESC LIMIT 10'
+	cur = conn.cursor()
+	cur.execute(query)
