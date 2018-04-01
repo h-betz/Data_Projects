@@ -52,14 +52,6 @@ def preprocess_data(data):
 			data[idx] = median
 	return data
 
-# Performs gradient descent
-def gradient_descent_multi(x, y, theta, alpha, iterations):
-	m = len(y)
-
-	for j in range(iterations):
-		h = x.dot(theta)
-		delta = (1 / m) * np.sum(np.multiply(x, (h - y)))
-
 if __name__ == "__main__":
 	# Load JSON info for db connection
 	print('Connecting to database')
@@ -103,6 +95,3 @@ if __name__ == "__main__":
 	sqft = preprocess_data(np.array(sqft))
 	price = preprocess_data(np.array(price))
 	theta = np.zeros((1,1))
-	alpha = 0.01
-	iterations = 400
-	gradient_descent_multi(sqft, price, theta, alpha, iterations)
