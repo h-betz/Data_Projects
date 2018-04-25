@@ -91,11 +91,17 @@ class DB_Controller():
 		header = next(reader)
 		self.set_columns(header=header)
 		formatted_columns = self.format_columns(header, spec=spec)
-		if not self.table_exists():
-			self.create_table(formatted_columns)
+		# if not self.table_exists():
+		self.create_table(formatted_columns)
 		print('Loading data to database...')
 		for row in reader:
 			self.insert_data(row, spec=spec)
 		print('Finished loading data. Closing file and committing changes.')
 		self.dbconn.commit()
 		csv_file.close()
+
+
+	def execute_query(self, query):
+		cur = self.dbconn.cursor()
+		cur.execute(query)
+		return cur.fetchall()
